@@ -16,6 +16,7 @@ const SemiList = (props) => {
             <div key = {country.name}>{country.name}
             <button onClick={() => clickToViewInfo(country)}>Info</button>
             </div>
+            
             )}
             
         </div>
