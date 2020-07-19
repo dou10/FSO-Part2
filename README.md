@@ -5,7 +5,7 @@
 <p align="center">
 <img src= "https://github.com/dou10/FSO-Part2/blob/master/Screen%20Shot%20part%202.png" height="550" width="250" align=center>
 </p>
-3) Once you input matches with exactly one country, it will display simple data of the country as well as the current weather in the capital.
+3) Once your input matches with exactly one country, it will display simple data of the country as well as the current weather in the capital.
 <p align="center">
 <img src= "https://github.com/dou10/FSO-Part2/blob/master/Screen%20Shot%20part%203.png" height="550" width="250" align=center>
 </p>
