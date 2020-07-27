@@ -1,87 +1,110 @@
-<<<<<<< HEAD
-import React, { useState, useEffect } from 'react'
+import React, { useState,useEffect } from 'react'
 import Filter from './Components/Filter'
 import PersonForm from './Components/PersonForm'
 import Persons from './Components/Persons'
-import axios from 'axios'
+import backend from './services/backend'
 
 const App = () => {
   const [ persons, setPersons ] = useState([]) 
+
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber] = useState('')
   const [ filter, setFilter] = useState('')
+  const [sucessMessage, setSuccessMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
-const hook = () => {
-  console.log('effect')
-  axios.get('http://localhost:3001/persons')
-  .then(response => {
-    console.log('promised fulfilled')
-    setPersons(response.data)
-  })
-}
+  const hook = () => {
+    backend
+      .getAll()
+      .then(intialPersons => {
+        setPersons(intialPersons)
+      })
+  }
 
-useEffect(hook,[])
+  useEffect(hook,[])
+
   const addPerson = (event) => {
     event.preventDefault()
 
-    if(persons.some(person => person.name === newName)){
-      alert(`${newName} is already added to phonebook`)
+    const targetName = persons.some(person =>person.name === newName)
+    const targetNumber = persons.some(person => person.number === newNumber)
+    
+
+    console.log(targetName,targetNumber)
+
+    if(targetName){
+      if(targetNumber){
+        alert('Person has already been added')
+      }
+
+      else{
+        if(window.confirm(`${newName} is already added to the phonebook, replace the old number with a new one?`)){
+          console.log('updating')
+
+          const nameToUpdate = persons.find(person => person.name === newName)
+          const targetId = nameToUpdate.id
+          const updatedRecord = {...nameToUpdate, number: newNumber}
+
+          console.log(targetId)
+          backend
+          .update(targetId,updatedRecord)
+          .then(returnedRecord => {
+            setPersons(persons.map(note => note.id !== targetId ? note : returnedRecord))
+          })
+          setSuccessMessage(`${newName} has been updated`)
+          setTimeout(() => {
+            setSuccessMessage(null)
+          },5000 )
+        }
+      }
+
     }
+
     else{
       const personObject = {
         name: newName,
         number: newNumber
       }
-      setPersons(persons.concat(personObject))
-      setNewNumber('')
-      setNewName('')
+      backend
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+          setNewNumber('')
+          setNewName('')
+          setSuccessMessage(`${personObject.name} has been added to the phonebook`)
+          setTimeout(() => {
+            setSuccessMessage(null)
+          },5000 )
+        })
+      }
     }
+
+  const deletePerson = (id) => {
+ 
+    console.log(id)
+    if(window.confirm('Do you want to delete?')){
+      backend
+        .deleteRecord(id)
+        .then(newList => {
+          setPersons(persons.filter(item => item.id !== id))
+          setSuccessMessage(`Record has been deleted from the phonebook`)
+          setTimeout(() => {
+            setSuccessMessage(null)
+          },5000 )
+        })
+        .catch(error => {
+          setErrorMessage(`Error: ${persons.find(item => item.id === id).name} has already been deleted`)
+          setTimeout(() => {
+            setErrorMessage(null)
+          },5000 )
+        })
+      }
   }
 
   const handleNameChange =(event) =>{
     setNewName(event.target.value)
   }
 
-=======
-import React, { useState } from 'react'
-import Filter from './Components/Filter'
-import PersonForm from './Components/PersonForm'
-import Persons from './Components/Persons'
-
-const App = () => {
-  const [ persons, setPersons ] = useState([
-    { name: 'Arto Hellas', number: '040-123456' },
-    { name: 'Ada Lovelace', number: '39-44-5323523' },
-    { name: 'Dan Abramov', number: '12-43-234345' },
-    { name: 'Mary Poppendieck', number: '39-23-6423122' }
-  ]) 
-
-  const [ newName, setNewName ] = useState('')
-  const [ newNumber, setNewNumber] = useState('')
-  const [ filter, setFilter] = useState('')
-
-  const addPerson = (event) => {
-    event.preventDefault()
-
-    if(persons.some(person => person.name === newName)){
-      alert(`${newName} is already added to phonebook`)
-    }
-    else{
-      const personObject = {
-        name: newName,
-        number: newNumber
-      }
-      setPersons(persons.concat(personObject))
-      setNewNumber('')
-      setNewName('')
-    }
-  }
-
-  const handleNameChange =(event) =>{
-    setNewName(event.target.value)
-  }
-
->>>>>>> 7e7a95b08613034c2b841b8606bc0d96e6ead423
   const handleNumberChange = (event) => {
     setNewNumber(event.target.value)
   }
@@ -90,9 +113,36 @@ const App = () => {
     console.log(event.target.value)
     setFilter(event.target.value.toLowerCase())
   }
+
+  const Notification = ({ message }) => {
+    if (message === null) {
+      return null
+    }
+  
+    return (
+      <div className="sucess">
+        {message}
+      </div>
+    )
+  }
+
+  const ErrorNotification = ({message}) => {
+    if(message === null){
+      return null
+    }
+
+    return(
+        <div className="error">
+          {message}
+        </div>
+      
+    )
+  }
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={sucessMessage} />
+      <ErrorNotification message={errorMessage} />
       <Filter filter = {filter} handleFilterChange={handleNewFilter} />
       
       <h2>add a new</h2>
@@ -105,7 +155,7 @@ const App = () => {
       />
 
       <h2>Numbers</h2>
-      <Persons persons = {persons} filter={filter} />
+      <Persons persons = {persons} filters={filter} deletePerson = {deletePerson} />
       
     </div>
   )
